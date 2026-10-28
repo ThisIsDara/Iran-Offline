@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Key Admin</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body { overflow: auto; height: auto; min-height: 100vh; }
+        .wrap { max-width: 1000px; margin: 0 auto; padding: 30px 20px 60px; }
+
+        header.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+        header.top h1 { font-size: 20px; }
+        header.top .sub { color: #666; font-size: 13px; margin-top: 4px; }
+
+        .panel { background: #18181b; border: 1px solid #2d2d2d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .panel h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: #a1a1aa; margin-bottom: 14px; }
+
+        .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat { flex: 1; min-width: 130px; background: #0e0e0e; border: 1px solid #2d2d2d; border-radius: 6px; padding: 14px; }
+        .stat .n { font-size: 24px; font-weight: bold; }
+        .stat .l { color: #666; font-size: 12px; margin-top: 2px; }
+        .stat.good .n { color: #22c55e; }
+        .stat.warn .n { color: #f59e0b; }
+        .stat.live .n { color: #ef4444; }
+
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .grow { flex: 1; min-width: 160px; }
+
+        input[type=text], input[type=password], input[type=date], select, textarea {
+            padding: 9px 12px; border-radius: 4px; border: 1px solid #2d2d2d;
+            background: #0e0e0e; color: #efeff1; font-size: 14px; font-family: inherit; width: 100%;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #9147ff; }
+
+        .btn {
+            padding: 9px 16px; background: #2d2d2d; border: 1px solid #3a3a3a; border-radius: 4px;
+            color: #efeff1; cursor: pointer; font-size: 14px; white-space: nowrap;
+        }
+        .btn:hover { background: #3a3a3a; }
+        .btn.primary { background: #9147ff; border-color: #9147ff; }
+        .btn.primary:hover { background: #772ce8; }
+        .btn.danger { background: #7f1d1d; border-color: #7f1d1d; }
+        .btn.danger:hover { background: #991b1b; }
+        .btn.small { padding: 5px 10px; font-size: 12px; }
+        .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 8px; border-bottom: 1px solid #2d2d2d; }
+        td { padding: 10px 8px; border-bottom: 1px solid #202020; vertical-align: middle; }
+        tr:hover td { background: #1c1c1f; }
+        .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+        .muted { color: #666; }
+        .sub-note { color: #a1a1aa; }
+        .sub-note small { display: block; color: #555; font-size: 11px; margin-top: 2px; }
+        .secret-cell { display: flex; align-items: center; gap: 6px; }
+        .secret-cell code { color: #c4b5fd; }
+
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .pill.active { background: rgba(34,197,94,.15); color: #22c55e; }
+        .pill.revoked { background: rgba(239,68,68,.15); color: #ef4444; }
+        .pill.expired { background: rgba(245,158,11,.15); color: #f59e0b; }
+        .pill.live { background: rgba(239,68,68,.2); color: #ff6b6b; margin-left: 4px; animation: pulse 1.5s infinite; }
+
+        pre {
+            background: #0e0e0e; border: 1px solid #2d2d2d; border-radius: 6px; padding: 14px;
+            overflow-x: auto; font-size: 12px; line-height: 1.6; color: #c4b5fd;
+        }
+        .hint { color: #666; font-size: 12px; margin-top: 8px; line-height: 1.6; }
+        .hint code { background: #0e0e0e; padding: 2px 5px; border-radius: 3px; color: #c4b5fd; }
+
+        dialog {
+            background: #18181b; color: #efeff1; border: 1px solid #2d2d2d;
+            border-radius: 8px; padding: 0; width: 420px; max-width: 92vw;
+        }
+        dialog::backdrop { background: rgba(0,0,0,.7); }
+        .dialog-body { padding: 22px; }
+        .dialog-body h3 { font-size: 16px; margin-bottom: 16px; }
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 12px; color: #a1a1aa; margin-bottom: 6px; }
+        .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .form-error { color: #ef4444; font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+        #login-view { max-width: 340px; margin: 80px auto; }
+        .empty { color: #666; font-size: 13px; padding: 20px; text-align: center; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- login -->
+    <div id="login-view" class="panel">
+        <h2>Admin login</h2>
+        <form id="login-form">
+            <input type="password" id="password-input" placeholder="Admin password" autocomplete="current-password" autofocus>
+            <div class="form-error" id="login-error"></div>
+            <button type="submit" class="btn primary" style="width:100%;margin-top:10px">Sign in</button>
+        </form>
+        <p class="hint">Password is set by the <code>ADMIN_PASSWORD</code> env var, or generated into <code>data/admin-password.txt</code> on first start (also printed in the server log).</p>
+        <p class="hint"><a href="/" style="color:#9147ff">&larr; Back to chat</a></p>
+    </div>
+
+    <!-- dashboard -->
+    <div id="dash-view" class="wrap hidden">
+        <header class="top">
+            <div>
+                <h1>Stream Key Admin</h1>
+                <div class="sub">Only people with an active key can publish to your MediaMTX server.</div>
+            </div>
+            <div class="row">
+                <button class="btn" id="refresh-btn">Refresh</button>
+                <button class="btn" id="logout-btn">Log out</button>
+                <a class="btn" href="/">Chat</a>
+            </div>
+        </header>
+
+        <div class="panel">
+            <div class="stats">
+                <div class="stat good"><div class="n" id="stat-active">0</div><div class="l">Active keys</div></div>
+                <div class="stat live"><div class="n" id="stat-live">0</div><div class="l">Live now</div></div>
+                <div class="stat"><div class="n" id="stat-total">0</div><div class="l">Total keys</div></div>
+                <div class="stat"><div class="n" id="stat-streams">0</div><div class="l">Rooms with keys</div></div>
+            </div>
+            <div id="enforcement-note" class="hint" style="margin-top:14px"></div>
+        </div>
+
+        <div class="panel">
+            <div class="row" style="justify-content:space-between;margin-bottom:14px">
+                <h2 style="margin:0">Keys</h2>
+                <button class="btn primary" id="new-key-btn">+ New key</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Streamer</th><th>Room</th><th>Key</th><th>Status</th><th>Expires</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="keys-body"></tbody>
+            </table>
+            <div class="empty hidden" id="keys-empty">No keys yet. Create one to hand out to a streamer.</div>
+        </div>
+
+        <div class="panel">
+            <h2>MediaMTX setup (required for enforcement)</h2>
+            <pre id="mtx-snippet">loading...</pre>
+            <p class="hint">
+                Put this in your <code>mediamtx.yml</code>, restart MediaMTX, then tell each streamer to use:<br>
+                <b>Server</b> <code id="obs-server"></code> &nbsp;&middot;&nbsp; <b>Stream Key</b> <code>&lt;room&gt;?key=&lt;THE KEY&gt;</code><br>
+                The <code>?key=</code> part is what gets validated. Without a valid key the publish is rejected; viewers are never affected.
+            </p>
+        </div>
+    </div>
+
+    <!-- create dialog -->
+    <dialog id="key-dialog">
+        <div class="dialog-body">
+            <h3>New stream key</h3>
+            <!-- novalidate: admin.js reports missing/invalid fields with a
+                 message that names them, which the browser's generic
+                 "Please fill out this field" tooltip does not. -->
+            <form id="key-form" novalidate>
+                <div class="field">
+                    <label for="f-label">Streamer name</label>
+                    <input type="text" id="f-label" placeholder="e.g. Dara" maxlength="40">
+                    <div class="hint">Just a label so you remember who this is.</div>
+                </div>
+                <div class="field">
+                    <label for="f-stream">Room / stream name</label>
+                    <input type="text" id="f-stream" placeholder="e.g. arthas" maxlength="64">
+                    <div class="hint">The room they will publish to. Use <code>*</code> to allow any room.</div>
+                </div>
+                <div class="field">
+                    <label for="f-expiry">Valid for</label>
+                    <select id="f-expiry">
+                        <option value="never">No expiry</option>
+                        <option value="7">7 days</option>
+                        <option value="30">30 days</option>
+                        <option value="90">90 days</option>
+                        <option value="1">1 day</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="f-note">Note (optional)</label>
+                    <input type="text" id="f-note" placeholder="e.g. Friday nights only" maxlength="140">
+                </div>
+                <div class="form-error" id="form-error"></div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn primary">Create key</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <div class="error-toast" id="error-toast"></div>
+    <script src="admin.js"></script>
+</body>
+</html>

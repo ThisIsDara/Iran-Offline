@@ -1,0 +1,66 @@
+# =============================================================
+#  Reference mediamtx.yml for stream-key enforcement
+# =============================================================
+#
+#  rtmp-chat.sh writes config/mediamtx.yml for you, already wired to
+#  the chat server on your chosen port. Copy the block below into your
+#  own mediamtx.yml if you run MediaMTX somewhere else.
+#
+#  Publish URLs:
+#      rtmp://<server>:1935/live/<room>?key=<STREAM KEY>
+#
+#  Viewers are unaffected - reading stays public.
+# =============================================================
+
+logLevel: info
+logDestinations: [stdout]
+
+# RTSP and SRT are not used by this app.
+rtsp: false
+srt: false
+
+rtmp: true
+rtmpAddress: :1935
+
+hls: true
+hlsAddress: :8888
+
+webrtc: true
+webrtcAddress: :8889
+
+api: true
+apiAddress: 127.0.0.1:9997
+
+metrics: false
+pprof: false
+playback: false
+
+# MediaMTX asks this server before allowing anything to go live. A 2xx reply
+# means allow, anything else rejects the client. Only publishing is gated, so
+# viewers keep working even when the chat server is down or restarting.
+authMethod: http
+authHTTPAddress: "http://127.0.0.1:8080/mediamtx/auth"
+
+authHTTPExclude:
+  - action: read
+  - action: playback
+  - action: api
+  - action: metrics
+  - action: pprof
+
+# Any room may be published to; the stream key decides who may publish it.
+paths:
+  all_others:
+    source: publisher
+
+# --------------------------------------------------------------------
+#  NB: the older
+#
+#      globalHooks:
+#        runOnInit: "http://127.0.0.1:8080/mediamtx/hooks/publish/on_init"
+#
+#  form no longer exists. MediaMTX 1.x removed it and refuses to start:
+#      ERR: json: unknown field "globalHooks"
+#
+#  Use authMethod/authHTTPAddress above.
+# --------------------------------------------------------------------

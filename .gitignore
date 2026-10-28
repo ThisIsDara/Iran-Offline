@@ -1,0 +1,8 @@
+# Generated deliverables at the repository root
+/rtmp-chat-offline.tar.gz
+/rtmp-chat-offline.zip
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

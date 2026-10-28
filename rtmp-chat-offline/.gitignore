@@ -1,0 +1,12 @@
+node_modules/
+data/
+.runtime/
+config/
+logs/
+.server.pid
+*.log
+*.zip
+
+# NOTE: deps/ is deliberately NOT ignored. node_modules.tar.gz, the Node
+# runtimes, the MediaMTX tarballs and SHA256SUMS are what make the offline
+# install work - they have to travel with the project.

@@ -1,0 +1,21 @@
+* text=auto
+
+# Linux entrypoints must keep LF endings, even on a Windows checkout.
+SHA256SUMS text eol=lf
+*.sh text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.example text eol=lf
+
+# Legacy Windows helpers.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Bundled runtimes and archives are binary.
+*.tar.gz binary
+*.tar.xz binary
+*.tgz binary
+*.zip binary
